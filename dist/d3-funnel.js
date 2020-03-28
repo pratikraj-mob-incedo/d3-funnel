@@ -1088,9 +1088,8 @@ var D3Funnel = /*#__PURE__*/function () {
     key: "addBlockLabel",
     value: function addBlockLabel(group, index) {
       var text = this.blocks[index].label.raw;
-      var _this$blocks$index = this.blocks[index],
-          paths = _this$blocks$index.paths,
-          value = _this$blocks$index.value;
+      var paths = this.blockPaths[index];
+      var value = this.blocks[index].value;
       var labelFill = this.settings.blockStyle[index] && this.settings.blockStyle[index].label && this.settings.blockStyle[index].label.color ? this.settings.blockStyle[index].label.color : this.blocks[index].label.color;
       var valueFill = this.settings.blockStyle[index] && this.settings.blockStyle[index].value && this.settings.blockStyle[index].value.color ? this.settings.blockStyle[index].value.color : this.blocks[index].label.color;
       var labelFontSize = this.settings.blockStyle[index] && this.settings.blockStyle[index].label && this.settings.blockStyle[index].label.fontSize ? this.settings.blockStyle[index].label.fontSize : this.settings.label.fontSize;

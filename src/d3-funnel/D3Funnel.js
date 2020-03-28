@@ -1050,7 +1050,8 @@ class D3Funnel {
      */
     addBlockLabel(group, index) {
         const text = this.blocks[index].label.raw;
-        const { paths, value } = this.blocks[index];
+        const paths = this.blockPaths[index];
+        const { value } = this.blocks[index];
 
         const labelFill = (this.settings.blockStyle[index] &&
                             this.settings.blockStyle[index].label &&
