@@ -65,6 +65,10 @@ const settings = {
             fontFamily: '"Reem Kufi", sans-serif',
             fontSize: '16px',
         },
+        value: {
+            fontFamily: '"Reem Kufi", sans-serif',
+            fontSize: '30px',
+        },
     },
 };
 
@@ -93,13 +97,34 @@ function onChange() {
 
     let options = {
         chart: {
-            bottomWidth: 3 / 8,
+            bottomWidth: 3 / 10,
+            curve: {
+                topOvalColor: '#000',
+                height: 10,
+            },
         },
         block: {
             minHeight: 25,
+            margin: 5,
         },
+        blockStyle: [{
+            backgroundColor: '#008080',
+            label: {
+                fontFamily: '"Reem Kufi", sans-serif',
+                fontSize: 16,
+                marginY: 10,
+            },
+            value: {
+                fontFamily: '"Reem Kufi", sans-serif',
+                fontSize: '5rem',
+                marginY: 20,
+            },
+        }],
         label: {
-            format: '{l}\n{f}',
+            fontFamily: '"Reem Kufi", sans-serif',
+            fontSize: 16,
+            color: 'red',
+            marginY: 0,
         },
     };
 

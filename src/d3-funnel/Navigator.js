@@ -61,7 +61,8 @@ class Navigator {
             },
             p01: {
                 x: centerX,
-                y: prevHeight + (curveHeight / 2),
+                // y: prevHeight + (curveHeight / 2),
+                y: prevHeight + (curveHeight),
             },
             p02: {
                 x: prevRightX,

@@ -32,6 +32,7 @@ class D3Funnel {
             dynamicHeight: false,
             dynamicSlope: false,
             barOverlay: false,
+            margin: 0,
             fill: {
                 scale: scaleOrdinal(schemeCategory10).domain(range(0, 10)),
                 type: 'solid',
@@ -39,12 +40,14 @@ class D3Funnel {
             minHeight: 0,
             highlight: false,
         },
+        blockStyle: [],
         label: {
             enabled: true,
             fontFamily: null,
             fontSize: '14px',
-            fill: '#fff',
             format: '{l}: {f}',
+            color: '#fff',
+            marginY: 0,
         },
         tooltip: {
             enabled: false,
@@ -135,7 +138,7 @@ class D3Funnel {
 
         // Set color scales
         this.colorizer.setInstanceId(this.id);
-        this.colorizer.setLabelFill(settings.label.fill);
+        this.colorizer.setLabelFill(settings.label.color);
         this.colorizer.setScale(settings.block.fill.scale);
 
         // Initialize funnel chart settings
@@ -146,6 +149,7 @@ class D3Funnel {
             bottomPinch: settings.chart.bottomPinch,
             isInverted: settings.chart.inverted,
             isCurved: settings.chart.curve.enabled,
+            topOvalColor: settings.chart.curve.topOvalColor,
             curveHeight: settings.chart.curve.height,
             curveShade: settings.chart.curve.shade,
             addValueOverlay: settings.block.barOverlay,
@@ -156,6 +160,8 @@ class D3Funnel {
             dynamicHeight: settings.block.dynamicHeight,
             dynamicSlope: settings.block.dynamicSlope,
             minHeight: settings.block.minHeight,
+            blockMargin: settings.block.margin,
+            blockStyle: settings.blockStyle,
             label: settings.label,
             tooltip: settings.tooltip,
             onBlockClick: settings.events.click.block,
@@ -326,14 +332,15 @@ class D3Funnel {
         return data.map((rawBlock, index) => {
             const block = Array.isArray(rawBlock) ? Utils.convertLegacyBlock(rawBlock) : rawBlock;
             const ratio = totalCount > 0 ? (block.value / totalCount || 0) : 1 / data.length;
-
             return {
                 index,
                 ratio,
                 value: block.value,
                 height: this.settings.height * ratio,
                 fill: this.colorizer.getBlockFill(
-                    block.backgroundColor,
+                    this.settings.blockStyle[index] ?
+                        this.settings.blockStyle[index].backgroundColor :
+                        null,
                     index,
                     this.settings.fillType,
                 ),
@@ -342,6 +349,7 @@ class D3Funnel {
                     raw: block.label,
                     formatted: this.formatter.format(block, this.labelFormatter),
                     color: this.colorizer.getLabelColor(block.labelColor),
+                    marginY: this.settings.label.marginY,
                 },
                 tooltip: {
                     enabled: block.enabled,
@@ -468,6 +476,11 @@ class D3Funnel {
         // Create the path definition for each funnel block
         // Remember to loop back to the beginning point for a closed path
         this.blocks.forEach((block, i) => {
+            const blockMargin = (this.settings.blockStyle[i] &&
+                                this.settings.blockStyle[i].block &&
+                                this.settings.blockStyle[i].block.margin) ?
+                this.settings.blockStyle[i].block.margin :
+                this.settings.blockMargin;
             // Make heights proportional to block weight
             if (this.settings.dynamicHeight) {
                 // Slice off the height proportional to this block
@@ -576,7 +589,7 @@ class D3Funnel {
                 prevHeight,
                 nextLeftX,
                 nextRightX,
-                nextHeight,
+                nextHeight: nextHeight - blockMargin,
                 curveHeight: this.settings.curveHeight,
                 ratio: block.ratio,
             };
@@ -699,7 +712,7 @@ class D3Funnel {
 
         // Draw top oval
         svg.append('path')
-            .attr('fill', this.colorizer.shade(this.blocks[0].fill.raw, this.settings.curveShade))
+            .attr('fill', this.settings.topOvalColor ? this.settings.topOvalColor : this.colorizer.shade(this.blocks[0].fill.raw, this.settings.curveShade))
             .attr('d', path);
     }
 
@@ -834,7 +847,7 @@ class D3Funnel {
                         `top: ${top}px`,
                         `border: 1px solid ${block.fill.raw}`,
                         'background: rgb(255,255,255,0.75)',
-                        'padding: 5px 15px',
+                        'marginY: 5px 15px',
                         'color: #000',
                         'font-size: 14px',
                         'font-weight: bold',
@@ -1036,32 +1049,87 @@ class D3Funnel {
      * @return {void}
      */
     addBlockLabel(group, index) {
-        const paths = this.blockPaths[index];
+        const text = this.blocks[index].label.raw;
+        const { paths, value } = this.blocks[index];
 
-        const formattedLabel = this.blocks[index].label.formatted;
-        const fill = this.blocks[index].label.color;
+        const labelFill = (this.settings.blockStyle[index] &&
+                            this.settings.blockStyle[index].label &&
+                            this.settings.blockStyle[index].label.color) ?
+            this.settings.blockStyle[index].label.color :
+            this.blocks[index].label.color;
 
-        // Center the text
+        const valueFill = (this.settings.blockStyle[index] &&
+                            this.settings.blockStyle[index].value &&
+                            this.settings.blockStyle[index].value.color) ?
+            this.settings.blockStyle[index].value.color :
+            this.blocks[index].label.color;
+
+        const labelFontSize = (this.settings.blockStyle[index] &&
+                                this.settings.blockStyle[index].label &&
+                                this.settings.blockStyle[index].label.fontSize) ?
+            this.settings.blockStyle[index].label.fontSize :
+            this.settings.label.fontSize;
+
+        const valueFontSize = (this.settings.blockStyle[index] &&
+                                this.settings.blockStyle[index].value &&
+                                this.settings.blockStyle[index].value.fontSize) ?
+            this.settings.blockStyle[index].value.fontSize :
+            this.settings.label.fontSize;
+
+        const labelFontFamily = (this.settings.blockStyle[index] &&
+                                this.settings.blockStyle[index].label &&
+                                this.settings.blockStyle[index].label.fontFamily) ?
+            this.settings.blockStyle[index].label.fontFamily :
+            null;
+        const valueFontFamily = (this.settings.blockStyle[index] &&
+                                this.settings.blockStyle[index].value &&
+                                this.settings.blockStyle[index].value.fontFamily) ?
+            this.settings.blockStyle[index].value.fontFamily :
+            null;
+
+        const labelPadding = (this.settings.blockStyle[index] &&
+                                this.settings.blockStyle[index].label &&
+                                this.settings.blockStyle[index].label.marginY) ?
+            this.settings.blockStyle[index].label.marginY :
+            this.blocks[index].label.marginY;
+        const valuePadding = (this.settings.blockStyle[index] &&
+                                this.settings.blockStyle[index].value &&
+                                this.settings.blockStyle[index].value.marginY) ?
+            this.settings.blockStyle[index].value.marginY :
+            this.blocks[index].label.marginY;
+
         const x = this.settings.width / 2;
         const y = this.getTextY(paths);
 
-        const text = group.append('text')
-            .attrs({
-                x,
-                y,
-                fill,
-                'font-size': this.settings.label.fontSize,
-                'text-anchor': 'middle',
-                'dominant-baseline': 'middle',
-                'pointer-events': 'none',
-            });
+        const labelText = group.append('text').text(text).attrs({
+            x,
+            y,
+            dy: -10 - labelPadding,
+            fill: labelFill,
+            'text-anchor': 'middle',
+            'dominant-baseline': 'middle',
+            'pointer-events': 'none',
+        });
 
-        // Add font-family, if exists
-        if (this.settings.label.fontFamily !== null) {
-            text.attr('font-family', this.settings.label.fontFamily);
+        labelText.style('font-size', labelFontSize);
+        if (labelFontFamily) {
+            labelText.style('font-family', labelFontFamily);
         }
 
-        this.addLabelLines(text, formattedLabel, x);
+        const valueText = group.append('text').text(value).attrs({
+            x,
+            y,
+            dy: 10 + valuePadding,
+            fill: valueFill,
+            'text-anchor': 'middle',
+            'dominant-baseline': 'middle',
+            'pointer-events': 'none',
+        });
+
+        valueText.style('font-size', valueFontSize);
+        if (valueFontFamily) {
+            valueText.style('font-family', valueFontFamily);
+        }
     }
 
     /**
